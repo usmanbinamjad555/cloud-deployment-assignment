@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  react-app-ci:
+    # Uses a pre-built image instead of a Dockerfile
+    image: node:18-alpine
+    container_name: react-web-app-ci
+    working_dir: /app
+    # Attaches a volume for your code
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm start"
+    # Uses a different port (8081) so it doesn't crash into Jenkins
+    ports:
+      - "8081:3000"
+    depends_on:
+      - db-ci
+
+  db-ci:
+    image: mongo:latest
+    container_name: app-database-ci
+    # Uses a different port for the database
+    ports:
+      - "27018:27017"
+    volumes:
+      - db-data-ci:/data/db
+
+volumes:
+  db-data-ci:

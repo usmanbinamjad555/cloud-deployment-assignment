@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  react-app:
+    image: usman00010/salon-web:latest
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    container_name: react-web-app
+
+  db:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - db-data:/data/db
+    container_name: app-database
+
+volumes:
+  db-data:
