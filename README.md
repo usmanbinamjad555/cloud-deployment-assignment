@@ -6,4 +6,4 @@ This repository contains a containerized web application built for deployment on
 - **Frontend/Backend:** Node.js / React
 - **Database:** MongoDB
 - **Containerization:** Docker & Docker Compose
-- **CI/CD:** Jenkins
+- **CI/CD:** Jenkins''
