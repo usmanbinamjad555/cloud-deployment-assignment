@@ -13,7 +13,7 @@ services:
     command: sh -c "npm install && npm start"
     # Uses a different port (8081) so it doesn't crash into Jenkins
     ports:
-      - "8081:3000"
+      - "8082:3000"
     depends_on:
       - db-ci
 
