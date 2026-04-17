@@ -36,12 +36,8 @@ pipeline {
         stage('Build Images (using CI compose file)') {
             steps {
                 dir("${env.WORKSPACE}") {
-                    echo "Building Docker images using ${COMPOSE_FILE_CI} for project: ${PROJECT_NAME_CI}"
-                    echo "This process is RAM intensive; ensure 8GB Swap is active."
-                    
-                    // --no-cache ensures a fresh build, but if it keeps crashing, 
-                    // you can remove --no-cache to speed things up.
-                    sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} build --no-cache frontend_ci"
+                    echo "Skipping manual build as YAML uses a base image. Pulling latest node image..."
+                    sh "docker pull node:18-alpine"
                 }
             }
         }
