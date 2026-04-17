@@ -1,69 +1,12 @@
-// pipeline {
-//     agent any // Run on any available Jenkins agent
-
-    
-//     environment {
-//         PROJECT_NAME_CI = "salon"
-//         COMPOSE_FILE_CI = "docker-compose-ci.yaml"
-//     }
-
-//     tools {
-//         git 'Default' // Ensure Git is configured in Jenkins Global Tool Configuration
-//     }
-
-//     stages {
-//         stage('Checkout Code') {
-//             steps {
-//                 echo 'Checking out code from GitHub...'
-//                 git branch: 'main', url: 'https://github.com/fakhar-iqbal/salon-react-app.git' // Replace with your repo URL
-//             }
-//         }
-
-//         stage('Build Images (using CI compose file)') {
-//     steps {
-//         dir("${env.WORKSPACE}") {
-//             echo "Building Docker images using docker-compose-ci.yaml for project: salon"
-//             sh 'docker-compose -p salon -f docker-compose-ci.yaml build --no-cache frontend_ci'
-//         }
-//     }
-// }
-
-
-        
-
-//         stage('Run Containerized Application (from CI compose file)') {
-//             steps {
-//                 echo "Starting containers using ${COMPOSE_FILE_CI} for project ${PROJECT_NAME_CI}..."
-//                 sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} up -d"
-                
-//                 sh "sleep 15" // Give services time to start
-//                 sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} ps"
-                
-//             }
-//         }
-
-//     }
-
-//     post {
-//         always {
-//             echo 'Pipeline finished.'
-            
-//         }
-//         success {
-//             echo 'Pipeline successful!'
-//         }
-//         failure {
-//             echo 'Pipeline failed.'
-//         }
-//     }
-// }
-
 pipeline {
     agent any
 
     environment {
         PROJECT_NAME_CI = "salon"
         COMPOSE_FILE_CI = "docker-compose-ci.yaml"
+        // Increased timeouts to prevent the pipeline from hanging during heavy builds
+        DOCKER_CLIENT_TIMEOUT = '600'
+        COMPOSE_HTTP_TIMEOUT = '600'
     }
 
     tools {
@@ -73,19 +16,19 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                echo 'Checking out code from GitHub...'
-                git branch: 'main', url: 'https://github.com/zain-nazir/AugmentFit_Assignment2.git'
+                echo 'Checking out code from your repository...'
+                // Using your specific GitHub URL
+                git branch: 'main', url: 'https://github.com/usmanbinamjad555/cloud-deployment-assignment.git'
             }
         }
 
         stage('Stop Previous Containers') {
             steps {
                 script {
-                    echo 'Stopping any existing containers for this project...'
-                    sh """
-                        docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} down || true
-                        docker system prune -f
-                    """
+                    echo 'Stopping any existing containers and cleaning up space...'
+                    // We use || true so the pipeline doesn't fail if there are no containers to stop
+                    sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} down || true"
+                    sh "docker system prune -f"
                 }
             }
         }
@@ -94,13 +37,10 @@ pipeline {
             steps {
                 dir("${env.WORKSPACE}") {
                     echo "Building Docker images using ${COMPOSE_FILE_CI} for project: ${PROJECT_NAME_CI}"
-                    echo "This will use Dockerfile.jenkins for full npm build process"
-
-                    script {
-                    env.DOCKER_CLIENT_TIMEOUT = '300'
-                    env.COMPOSE_HTTP_TIMEOUT = '300'
-                    }
-
+                    echo "This process is RAM intensive; ensure 8GB Swap is active."
+                    
+                    // --no-cache ensures a fresh build, but if it keeps crashing, 
+                    // you can remove --no-cache to speed things up.
                     sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} build --no-cache frontend_ci"
                 }
             }
@@ -108,23 +48,22 @@ pipeline {
 
         stage('Run Containerized Application') {
             steps {
-                echo "Starting containers using ${COMPOSE_FILE_CI} for project ${PROJECT_NAME_CI}..."
+                echo "Starting containers on Port 8082..."
                 sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} up -d"
                 
-                echo "Waiting for services to start..."
-                sh "sleep 20"
+                echo "Waiting 30 seconds for React to initialize..."
+                sh "sleep 30"
                 
                 echo "Checking container status..."
                 sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} ps"
-                
-                echo "Application should be available at: your url"
             }
         }
 
         stage('Health Check') {
             steps {
                 script {
-                    echo 'Performing health check...'
+                    echo 'Performing health check on Port 8082...'
+                    // curl -f fails the stage if it gets a 404 or 500 error
                     sh """
                         sleep 10
                         curl -f http://localhost:8082/ || exit 1
@@ -138,13 +77,14 @@ pipeline {
     post {
         always {
             echo 'Pipeline finished.'
-            sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} logs --tail=50"
+            // Keep logs for troubleshooting
+            sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} logs --tail=50 || true"
         }
         success {
-            echo 'Pipeline successful! Application is running at url'
+            echo 'Pipeline successful! Application is running at http://54.206.37.103:8082'
         }
         failure {
-            echo 'Pipeline failed. Cleaning up...'
+            echo 'Pipeline failed. Cleaning up to save resources...'
             sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} down || true"
         }
     }
