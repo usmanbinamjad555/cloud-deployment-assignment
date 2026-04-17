@@ -47,8 +47,8 @@ pipeline {
                 echo "Starting containers on Port 8082..."
                 sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} up -d"
                 
-                echo "Waiting 30 seconds for React to initialize..."
-                sh "sleep 30"
+                echo "Waiting 120 seconds for npm install and React to initialize..."
+                sh "sleep 120" // Increased from 30 to 120
                 
                 echo "Checking container status..."
                 sh "docker-compose -p ${PROJECT_NAME_CI} -f ${COMPOSE_FILE_CI} ps"
