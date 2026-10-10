@@ -113,4 +113,4 @@ The Firebase web config in `src/firebase.js` (including `apiKey`) is meant to be
 
 ---
 
-Author: Muhammad Usman — [LinkedIn](https://www.linkedin.com/in/muhammad-usman-the-dev) · [Portfolio](https://portfolio-usman-46c4.vercel.app)
+Author: Muhammad Usman — [LinkedIn](https://www.linkedin.com/in/muhammad-usman-the-dev) · [Portfolio](https://muhammad-usman-engineer.vercel.app)
